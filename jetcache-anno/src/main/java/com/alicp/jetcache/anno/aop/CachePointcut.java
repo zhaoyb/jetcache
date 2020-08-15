@@ -42,6 +42,9 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
         if (matchesThis(clazz)) {
             return true;
         }
+
+        // 如果类实现的接口 在'basePackages'中
+
         Class[] cs = clazz.getInterfaces();
         if (cs != null) {
             for (Class c : cs) {
@@ -61,9 +64,11 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
 
     public boolean matchesThis(Class clazz) {
         String name = clazz.getName();
+        // 排除的类
         if (exclude(name)) {
             return false;
         }
+        // 是否包含要代理的类
         return include(name);
     }
 
@@ -122,6 +127,7 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
         if (exclude(targetClass.getName())) {
             return false;
         }
+        // 生成key
         String key = getKey(method, targetClass);
         CacheInvokeConfig cac = cacheConfigMap.getByMethodInfo(key);
         if (cac == CacheInvokeConfig.getNoCacheInvokeConfigInstance()) {
@@ -129,13 +135,17 @@ public class CachePointcut extends StaticMethodMatcherPointcut implements ClassF
         } else if (cac != null) {
             return true;
         } else {
+            // cache调用配置
             cac = new CacheInvokeConfig();
             CacheConfigUtil.parse(cac, method);
 
             String name = method.getName();
             Class<?>[] paramTypes = method.getParameterTypes();
+
+            // 代理目标类
             parseByTargetClass(cac, targetClass, name, paramTypes);
 
+            // 将数据放入集合
             if (!cac.isEnableCacheContext() && cac.getCachedAnnoConfig() == null &&
                     cac.getInvalidateAnnoConfigs() == null && cac.getUpdateAnnoConfig() == null) {
                 cacheConfigMap.putByMethodInfo(key, CacheInvokeConfig.getNoCacheInvokeConfigInstance());

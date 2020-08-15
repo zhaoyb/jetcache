@@ -47,6 +47,7 @@ public class CacheContext {
 
     public CacheInvokeContext createCacheInvokeContext(ConfigMap configMap) {
         CacheInvokeContext c = newCacheInvokeContext();
+
         c.setCacheFunction((invokeContext, cacheAnnoConfig) -> {
             Cache cache = cacheAnnoConfig.getCache();
             if (cache == null) {
@@ -68,6 +69,7 @@ public class CacheContext {
             }
             return cache;
         });
+
         return c;
     }
 
@@ -97,6 +99,7 @@ public class CacheContext {
     public Cache __createOrGetCache(CachedAnnoConfig cachedAnnoConfig, String area, String cacheName) {
         String fullCacheName = area + "_" + cacheName;
         Cache cache = cacheManager.getCacheWithoutCreate(area, cacheName);
+        // double check
         if (cache == null) {
             synchronized (this) {
                 cache = cacheManager.getCacheWithoutCreate(area, cacheName);

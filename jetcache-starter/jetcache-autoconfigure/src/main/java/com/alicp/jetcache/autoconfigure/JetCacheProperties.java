@@ -5,6 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Created on 2016/11/23.
  *
+ *  application.yml 中 jetcache 配置类
+ *
+ *
  * @author <a href="mailto:areyouok@gmail.com">huangli</a>
  */
 @ConfigurationProperties(prefix = "jetcache")

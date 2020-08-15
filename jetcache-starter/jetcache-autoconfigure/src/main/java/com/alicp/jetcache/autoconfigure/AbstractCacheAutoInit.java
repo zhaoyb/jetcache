@@ -40,8 +40,14 @@ public abstract class AbstractCacheAutoInit implements InitializingBean {
         this.typeNames = cacheTypes;
     }
 
+    /**
+     *
+     * 属性被初始化后执行
+     *
+     */
     @Override
     public void afterPropertiesSet() {
+        // double check
         if (!inited) {
             synchronized (this) {
                 if (!inited) {
@@ -55,7 +61,9 @@ public abstract class AbstractCacheAutoInit implements InitializingBean {
 
     private void process(String prefix, Map cacheBuilders, boolean local) {
         ConfigTree resolver = new ConfigTree(environment, prefix);
+        // 获取属性配置
         Map<String, Object> m = resolver.getProperties();
+
         Set<String> cacheAreaNames = resolver.directChildrenKeys();
         for (String cacheArea : cacheAreaNames) {
             final Object configType = m.get(cacheArea + ".type");

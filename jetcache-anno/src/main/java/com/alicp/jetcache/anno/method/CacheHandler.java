@@ -90,10 +90,13 @@ public class CacheHandler implements InvocationHandler {
         CacheInvokeConfig cic = context.getCacheInvokeConfig();
         CachedAnnoConfig cachedConfig = cic.getCachedAnnoConfig();
         if (cachedConfig != null && (cachedConfig.isEnabled() || CacheContextSupport._isEnabled())) {
+            // 处理缓存操作
             return invokeWithCached(context);
         } else if (cic.getInvalidateAnnoConfigs() != null || cic.getUpdateAnnoConfig() != null) {
+            // 处理失效和更新操作
             return invokeWithInvalidateOrUpdate(context);
         } else {
+            // 直接调用目标方法  返回
             return invokeOrigin(context);
         }
     }
@@ -216,8 +219,10 @@ public class CacheHandler implements InvocationHandler {
 
     private static Object invokeWithCached(CacheInvokeContext context)
             throws Throwable {
+        // 缓存配置
         CacheInvokeConfig cic = context.getCacheInvokeConfig();
         CachedAnnoConfig cac = cic.getCachedAnnoConfig();
+
         Cache cache = context.getCacheFunction().apply(context, cac);
         if (cache == null) {
             logger.error("no cache with name: " + context.getMethod());

@@ -36,14 +36,24 @@ public class JetCacheInterceptor implements MethodInterceptor, ApplicationContex
         this.applicationContext = applicationContext;
     }
 
+    /**
+     *
+     * 被注解方法 处理
+     *
+     * @param invocation
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
+        // 判断配置是否存在
         if (configProvider == null) {
             configProvider = applicationContext.getBean(ConfigProvider.class);
         }
         if (configProvider != null && globalCacheConfig == null) {
             globalCacheConfig = configProvider.getGlobalCacheConfig();
         }
+        // 如果不存在 globalCacheConfig 或者不开启缓存，则直接调用方法 返回
         if (globalCacheConfig == null || !globalCacheConfig.isEnableMethodCache()) {
             return invocation.proceed();
         }
@@ -51,6 +61,7 @@ public class JetCacheInterceptor implements MethodInterceptor, ApplicationContex
         Method method = invocation.getMethod();
         Object obj = invocation.getThis();
         CacheInvokeConfig cac = null;
+        // 根据类和方法  获取之前解析后放到本地的 缓存配置
         if (obj != null) {
             String key = CachePointcut.getKey(method, obj.getClass());
             cac  = cacheConfigMap.getByMethodInfo(key);
@@ -66,17 +77,26 @@ public class JetCacheInterceptor implements MethodInterceptor, ApplicationContex
         }
         */
 
+        // 配置项不存在， 直接调用目标方法  返回
         if (cac == null || cac == CacheInvokeConfig.getNoCacheInvokeConfigInstance()) {
             return invocation.proceed();
         }
 
+        // 缓存上下文
         CacheInvokeContext context = configProvider.getCacheContext().createCacheInvokeContext(cacheConfigMap);
+        // 类
         context.setTargetObject(invocation.getThis());
+        // 目标调用
         context.setInvoker(invocation::proceed);
+        // 方法
         context.setMethod(method);
+        // 方法参数
         context.setArgs(invocation.getArguments());
+        // 配置
         context.setCacheInvokeConfig(cac);
         context.setHiddenPackages(globalCacheConfig.getHiddenPackages());
+
+        // 到这里开始核心流程
         return CacheHandler.invoke(context);
     }
 
