@@ -223,13 +223,17 @@ public class CacheHandler implements InvocationHandler {
         CacheInvokeConfig cic = context.getCacheInvokeConfig();
         CachedAnnoConfig cac = cic.getCachedAnnoConfig();
 
+        // 获取方法对应的cache对象
         Cache cache = context.getCacheFunction().apply(context, cac);
+        // 调用原始方法返回
         if (cache == null) {
             logger.error("no cache with name: " + context.getMethod());
             return invokeOrigin(context);
         }
 
+        // 生成key
         Object key = ExpressionUtil.evalKey(context, cic.getCachedAnnoConfig());
+        // key 为空， 没有办法缓存， 调用原始方法，并计数
         if (key == null) {
             return loadAndCount(context, cache, key);
         }
@@ -252,6 +256,7 @@ public class CacheHandler implements InvocationHandler {
                     return !ExpressionUtil.evalPostCondition(context, cic.getCachedAnnoConfig());
                 }
             };
+
             Object result = cache.computeIfAbsent(key, loader);
             return result;
         } catch (CacheInvokeException e) {

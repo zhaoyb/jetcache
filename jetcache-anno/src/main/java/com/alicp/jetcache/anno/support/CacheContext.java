@@ -47,8 +47,8 @@ public class CacheContext {
 
     public CacheInvokeContext createCacheInvokeContext(ConfigMap configMap) {
         CacheInvokeContext c = newCacheInvokeContext();
-
         c.setCacheFunction((invokeContext, cacheAnnoConfig) -> {
+            // 这里一个cacheAnnoConfig 对应一个cache对象
             Cache cache = cacheAnnoConfig.getCache();
             if (cache == null) {
                 if (cacheAnnoConfig instanceof CachedAnnoConfig) {
@@ -65,6 +65,7 @@ public class CacheContext {
                     }
                     cache = createCacheByCachedConfig(cacheDefineConfig.getCachedAnnoConfig(), invokeContext);
                 }
+
                 cacheAnnoConfig.setCache(cache);
             }
             return cache;
@@ -77,7 +78,7 @@ public class CacheContext {
         String area = ac.getArea();
         String cacheName = ac.getName();
         if (CacheConsts.isUndefined(cacheName)) {
-
+            // 生成默认cachename
             cacheName = configProvider.createCacheNameGenerator(invokeContext.getHiddenPackages())
                     .generateCacheName(invokeContext.getMethod(), invokeContext.getTargetObject());
         }
@@ -120,10 +121,13 @@ public class CacheContext {
     protected Cache buildCache(CachedAnnoConfig cachedAnnoConfig, String area, String cacheName) {
         Cache cache;
         if (cachedAnnoConfig.getCacheType() == CacheType.LOCAL) {
+            // 本地缓存
             cache = buildLocal(cachedAnnoConfig, area);
         } else if (cachedAnnoConfig.getCacheType() == CacheType.REMOTE) {
+            // 远程缓存
             cache = buildRemote(cachedAnnoConfig, area, cacheName);
         } else {
+            // 混合双缓存
             Cache local = buildLocal(cachedAnnoConfig, area);
             Cache remote = buildRemote(cachedAnnoConfig, area, cacheName);
 
@@ -135,10 +139,12 @@ public class CacheContext {
                     .cacheNullValue(cachedAnnoConfig.isCacheNullValue())
                     .buildCache();
         }
+
         cache.config().setRefreshPolicy(cachedAnnoConfig.getRefreshPolicy());
         cache = new CacheHandler.CacheHandlerRefreshCache(cache);
 
         cache.config().setCachePenetrationProtect(globalCacheConfig.isPenetrationProtect());
+
         PenetrationProtectConfig protectConfig = cachedAnnoConfig.getPenetrationProtectConfig();
         if (protectConfig != null) {
             cache.config().setCachePenetrationProtect(protectConfig.isPenetrationProtect());

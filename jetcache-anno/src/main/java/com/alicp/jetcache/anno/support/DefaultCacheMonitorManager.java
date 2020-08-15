@@ -36,7 +36,9 @@ public class DefaultCacheMonitorManager extends AbstractLifecycle implements Cac
 
     @Override
     public void addMonitors(String area, String cacheName, Cache cache) {
+        // 统计
         addMetricsMonitor(area, cacheName, cache);
+        // 更新 通知
         addCacheUpdateMonitor(area, cacheName, cache);
     }
 

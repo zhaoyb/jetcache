@@ -73,6 +73,13 @@ public class MultiLevelCache<K, V> extends AbstractCache<K, V> {
         }
     }
 
+    /**
+     *
+     * 两级缓存实现
+     *
+     * @param key
+     * @return
+     */
     @Override
     protected CacheGetResult<V> do_GET(K key) {
         for (int i = 0; i < caches.length; i++) {

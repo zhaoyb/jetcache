@@ -3,15 +3,18 @@ package com.alicp.jetcache;
 import com.alicp.jetcache.embedded.AbstractEmbeddedCache;
 import com.alicp.jetcache.external.AbstractExternalCache;
 import com.alicp.jetcache.support.JetCacheExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created on 2017/5/25.
@@ -56,14 +59,14 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
     @Override
     public V computeIfAbsent(K key, Function<K, V> loader, boolean cacheNullWhenLoaderReturnNull) {
         return AbstractCache.computeIfAbsentImpl(key, loader, cacheNullWhenLoaderReturnNull,
-                0, null, this);
+                                                 0, null, this);
     }
 
     @Override
     public V computeIfAbsent(K key, Function<K, V> loader, boolean cacheNullWhenLoaderReturnNull,
                              long expireAfterWrite, TimeUnit timeUnit) {
         return AbstractCache.computeIfAbsentImpl(key, loader, cacheNullWhenLoaderReturnNull,
-                expireAfterWrite, timeUnit, this);
+                                                 expireAfterWrite, timeUnit, this);
     }
 
     protected Cache concreteCache() {
@@ -101,7 +104,10 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
         }
     }
 
-    protected void addOrUpdateRefreshTask(K key, CacheLoader<K,V> loader) {
+    /**
+     * 缓存刷新
+     */
+    protected void addOrUpdateRefreshTask(K key, CacheLoader<K, V> loader) {
         RefreshPolicy refreshPolicy = config.getRefreshPolicy();
         if (refreshPolicy == null) {
             return;
@@ -110,7 +116,7 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
         if (refreshMillis > 0) {
             Object taskId = getTaskId(key);
             RefreshTask refreshTask = taskMap.computeIfAbsent(taskId, tid -> {
-                logger.debug("add refresh task. interval={},  key={}", refreshMillis , key);
+                logger.debug("add refresh task. interval={},  key={}", refreshMillis, key);
                 RefreshTask task = new RefreshTask(taskId, key, loader);
                 task.lastAccessTime = System.currentTimeMillis();
                 ScheduledFuture<?> future = JetCacheExecutor.heavyIOExecutor().scheduleWithFixedDelay(
@@ -141,6 +147,7 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
     }
 
     class RefreshTask implements Runnable {
+
         private Object taskId;
         private K key;
         private CacheLoader<K, V> loader;
@@ -161,7 +168,7 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
         }
 
         private void load() throws Throwable {
-            CacheLoader<K,V> l = loader == null? config.getLoader(): loader;
+            CacheLoader<K, V> l = loader == null ? config.getLoader() : loader;
             if (l != null) {
                 l = CacheUtil.createProxyLoader(cache, l, eventConsumer);
                 V v = l.load(key);
@@ -207,9 +214,9 @@ public class RefreshCache<K, V> extends LoadingCache<K, V> {
 
             // AbstractExternalCache buildKey method will not convert byte[]
             boolean lockSuccess = concreteCache.tryLockAndRun(lockKey, loadTimeOut, TimeUnit.MILLISECONDS, r);
-            if(!lockSuccess && multiLevelCache) {
+            if (!lockSuccess && multiLevelCache) {
                 JetCacheExecutor.heavyIOExecutor().schedule(
-                        () -> refreshUpperCaches(key), (long)(0.2 * refreshMillis), TimeUnit.MILLISECONDS);
+                        () -> refreshUpperCaches(key), (long) (0.2 * refreshMillis), TimeUnit.MILLISECONDS);
             }
         }
 

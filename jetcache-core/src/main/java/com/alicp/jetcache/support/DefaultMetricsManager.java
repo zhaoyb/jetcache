@@ -47,6 +47,11 @@ public class DefaultMetricsManager {
         this.metricsCallback = new StatInfoLogger(verboseLog);
     }
 
+    /**
+     *
+     * 监控统计
+     *
+     */
     Runnable cmd = new Runnable() {
         private long time = System.currentTimeMillis();
 

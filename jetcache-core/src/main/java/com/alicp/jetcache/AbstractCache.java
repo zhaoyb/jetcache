@@ -151,6 +151,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
         AbstractCache<K, V> abstractCache = CacheUtil.getAbstractCache(cache);
         CacheLoader<K, V> newLoader = CacheUtil.createProxyLoader(cache, loader, abstractCache::notify);
         CacheGetResult<V> r;
+        // 自动刷新
         if (cache instanceof RefreshCache) {
             RefreshCache<K, V> refreshCache = ((RefreshCache<K, V>) cache);
             r = refreshCache.GET(key);
@@ -171,6 +172,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
                 }
             };
 
+            // 并发回源控制
             V loadedValue;
             if (cache.config().isCachePenetrationProtect()) {
                 loadedValue = synchronizedLoad(cache.config(), abstractCache, key, newLoader, cacheUpdater);
